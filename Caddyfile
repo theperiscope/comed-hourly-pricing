@@ -1,0 +1,63 @@
+(cors_common) {
+  header Access-Control-Allow-Origin "*"
+  header Access-Control-Allow-Methods "GET, OPTIONS"
+  header Access-Control-Allow-Headers "*"
+}
+
+:8123
+
+# Baseline security headers applied to all responses
+header {
+  X-Content-Type-Options "nosniff"
+  Referrer-Policy "no-referrer"
+  Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://hourlypricing.comed.com"
+}
+
+# Enable compression globally (Caddy negotiates zstd/gzip)
+encode zstd gzip
+
+# Caching headers
+@cache-html path /index.html
+header @cache-html {
+  Cache-Control "public, max-age=300"
+  Vary "Accept-Encoding"
+}
+
+# Long-lived cache for static assets (immutable)
+@cache-static {
+  path *.js *.css *.png *.ico *.webmanifest
+}
+header @cache-static {
+  Cache-Control "public, max-age=31536000, immutable"
+  Vary "Accept-Encoding"
+}
+
+@api-preflight {
+  method OPTIONS
+  path /5minutefeed /currenthouraverage
+}
+
+handle @api-preflight {
+  import cors_common
+  respond 204
+}
+
+handle_path /5minutefeed {
+  import cors_common
+  rewrite * /api?type=5minutefeed&{query}
+  reverse_proxy https://hourlypricing.comed.com {
+    header_up Host {upstream_hostport}
+  }
+}
+
+handle_path /currenthouraverage {
+  import cors_common
+  rewrite * /api?type=currenthouraverage&{query}
+  reverse_proxy https://hourlypricing.comed.com {
+    header_up Host {upstream_hostport}
+  }
+}
+
+root * /srv
+file_server
