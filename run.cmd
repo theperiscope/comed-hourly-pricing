@@ -1,0 +1,1 @@
+@docker run -d -p 8123:8123 --name comed-hourly-pricing comed-hourly-pricing

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ComEd 5-Minute Pricing</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <style>
+      :root {
+        --md-sys-color-primary: #6750a4;
+        --md-sys-color-on-primary: #ffffff;
+        --md-sys-color-primary-container: #eaddff;
+        --md-sys-color-on-primary-container: #21005d;
+        --md-sys-color-surface: #fffbfe;
+        --md-sys-color-on-surface: #1c1b1f;
+        --md-sys-color-surface-variant: #e7e0ec;
+        --md-sys-color-on-surface-variant: #49454f;
+        --md-sys-color-outline: #79747e;
+        --md-sys-color-shadow: #000000;
+        --md-ref-typeface-brand: 'Roboto', sans-serif;
+        --md-ref-typeface-plain: 'Roboto', sans-serif;
+      }
+      html {
+        height: calc(100vh - 1rem);
+        overflow: hidden;
+      }
+      @media (max-width: 428px) and (orientation: portrait) {
+        html {
+          font-size: 12px;
+        }
+      }
+      body {
+        height: calc(100vh - 1rem);
+        font-family: var(--md-ref-typeface-plain);
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+        margin: 0;
+        padding: 0.5rem;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .container {
+        max-width: calc(100vw - 2rem);
+        margin: 0 auto;
+        height: calc(100vh - 1rem);
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(3, 1fr); /* Always three columns */
+        grid-template-rows: auto 1fr; /* Cards row + chart fills remaining */
+      }
+      price-card {
+        background-color: var(--md-sys-color-surface-variant);
+        color: var(--md-sys-color-on-surface-variant);
+        border-radius: 0.75rem;
+        padding: 0.5rem 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        transition: background-color 0.5s ease;
+      }
+      .chart-container {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        background-color: var(--md-sys-color-surface-variant);
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        display: flex;
+        flex-direction: column;
+        min-height: 300px;
+        max-width: calc(100vw - 2rem);
+      }
+      .chart-controls-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        gap: 1rem;
+      }
+      .chart-controls {
+        display: flex;
+      }
+      .chart-controls button {
+        font-family: var(--md-ref-typeface-plain);
+        font-size: 0.875rem;
+        font-weight: 400;
+        border: 1px solid var(--md-sys-color-outline);
+        background-color: transparent;
+        color: var(--md-sys-color-primary);
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-left: -1px;
+      }
+      .chart-controls button:first-child {
+        margin-left: 0;
+        border-top-left-radius: 1.5rem;
+        border-bottom-left-radius: 1.5rem;
+      }
+      .chart-controls button:last-child {
+        border-top-right-radius: 1.5rem;
+        border-bottom-right-radius: 1.5rem;
+      }
+      .chart-controls button.active {
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        font-weight: 700;
+      }
+      price-chart {
+        display: block;
+        max-width: 100vw;
+        flex-grow: 1;
+        max-height: calc(100vh - 12rem); /* Fill the flexible parent container */
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@6.0.0/dist/echarts.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <price-card title="Current Hour"></price-card>
+      <price-card title="Selected Range"></price-card>
+      <price-card title="Last 24 Hours"></price-card>
+
+      <div class="chart-container">
+        <div class="chart-controls-wrapper">
+          <div class="chart-controls zoom-controls">
+            <button data-hours="24">24h</button>
+            <button data-hours="12">12h</button>
+            <button data-hours="6">6h</button>
+            <button data-hours="3" class="active">3h</button>
+            <button data-hours="2">2h</button>
+            <button data-hours="1">1h</button>
+          </div>
+          <div class="chart-controls type-controls">
+            <button id="bar-chart-btn" class="active">Bar</button>
+            <button id="line-chart-btn">Line</button>
+          </div>
+        </div>
+        <price-chart></price-chart>
+      </div>
+    </div>
+
+    <template id="price-card-template">
+      <style>
+        :host {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
+        .title {
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: var(--md-sys-color-on-surface-variant);
+          transition: color 0.5s ease;
+        }
+        .price {
+          font-size: 3rem;
+          font-weight: 900;
+          color: var(--md-sys-color-primary);
+          transition: color 0.5s ease;
+        }
+        /* CSS spinner from https://cssloaders.github.io/ */
+        .loader {
+          width: 48px;
+          height: 48px;
+          border: 5px solid #fff;
+          border-bottom-color: transparent;
+          border-radius: 50%;
+          display: inline-block;
+          box-sizing: border-box;
+          animation: rotation 1s linear infinite;
+          padding: 7px 0 8px 0; /* price font size makes for 63px => 48 + 7 + 8 */
+        }
+
+        @keyframes rotation {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+      <div class="title"></div>
+      <div class="price">
+        <span class="loader"></span>
+      </div>
+    </template>
+
+    <script type="module">
+      const PRICE_COLOR_LOW = '#388E3C';
+      const PRICE_COLOR_MEDIUM = '#F57C00';
+      const PRICE_COLOR_HIGH = '#D32F2F';
+      const PRICE_COLOR_DEFAULT = 'var(--md-sys-color-surface-variant)';
+      const THEME_COLOR_PRIMARY = '#6750a4';
+      const THEME_COLOR_OUTLINE = '#79747e';
+
+      class PriceCard extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById('price-card-template').content;
+          this.attachShadow({ mode: 'open' }).appendChild(template.cloneNode(true));
+          this.shadowRoot.querySelector('.title').innerText = this.getAttribute('title');
+        }
+        setCardTitle(text) {
+          this.shadowRoot.querySelector('.title').innerText = text;
+        }
+        getColorForPrice(price) {
+          if (price < 8) return PRICE_COLOR_LOW;
+          if (price >= 8 && price < 15) return PRICE_COLOR_MEDIUM;
+          if (price >= 15) return PRICE_COLOR_HIGH;
+          return PRICE_COLOR_DEFAULT;
+        }
+        setPrice(price) {
+          const numericPrice = parseFloat(price);
+          const priceText = isNaN(numericPrice) ? 'N/A' : `${numericPrice.toFixed(1)}¢`;
+          this.shadowRoot.querySelector('.price').innerText = priceText;
+          const color = this.getColorForPrice(numericPrice);
+          this.style.backgroundColor = color;
+          const useLightText = color !== PRICE_COLOR_DEFAULT;
+          const textColor = useLightText ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface-variant)';
+          const priceValueColor = useLightText ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-primary)';
+          this.shadowRoot.querySelector('.title').style.color = textColor;
+          this.shadowRoot.querySelector('.price').style.color = priceValueColor;
+        }
+      }
+      customElements.define('price-card', PriceCard);
+
+      class PriceChart extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot.innerHTML = `<div style="width: 100%; height: 100%;"></div>`;
+          this.chart = echarts.init(this.shadowRoot.querySelector('div'));
+          this.isInitialLoad = true;
+          this.chartType = 'bar';
+          this.currentData = [];
+          this.lastSelectedHours = 3; // default initial zoom hours
+          this.initializeChart();
+          this.chart.on('dataZoom', () => {
+            var option = this.chart.getOption();
+            console.debug(option.dataZoom[0].startValue, option.dataZoom[0].endValue);
+            this.updateSelectedAverage();
+          });
+        }
+
+        _getResponsiveOptions() {
+          const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+          const nameFontSize = 0.875 * rootFontSize;
+          const labelFontSize = 0.75 * rootFontSize;
+
+          return {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: { type: 'cross', label: { backgroundColor: '#6a7985' } },
+              textStyle: { fontSize: labelFontSize },
+              formatter: function (params) {
+                const param = params[0];
+                const date = new Date(param.value[0]);
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const dateString = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                const value = parseFloat(param.value[1]).toFixed(1);
+
+                return `${dateString}, ${timeString}<br/>${param.marker}<strong>${value} ¢</strong>`;
+              }
+            },
+            grid: { left: '50px', right: '1%', top: '40px', bottom: '80px' },
+            xAxis: {
+              type: 'time',
+              name: '',
+              nameLocation: 'middle',
+              nameGap: 30,
+              nameTextStyle: { fontSize: nameFontSize },
+              axisLabel: {
+                fontSize: labelFontSize,
+                formatter: function (value) {
+                  const date = new Date(value);
+                  const hours = date.getHours().toString().padStart(2, '0');
+                  const minutes = date.getMinutes().toString().padStart(2, '0');
+                  return `${hours}:${minutes}`;
+                }
+              }
+            },
+            yAxis: {
+              type: 'value',
+              name: '',
+              nameLocation: 'middle',
+              nameGap: 0,
+              nameTextStyle: { fontSize: nameFontSize },
+              axisLabel: { formatter: '{value} ¢', fontSize: labelFontSize }
+            },
+            dataZoom: [
+              { type: 'inside' },
+              {
+                type: 'slider',
+                borderColor: '#00000000',
+                height: 50,
+                bottom: 0,
+                dataBackground: {
+                  areaStyle: { color: 'rgba(73, 69, 79, 0.9)' },
+                  lineStyle: { color: 'transparent' }
+                },
+                fillerColor: 'rgba(103, 80, 164, 0.2)',
+                handleStyle: {
+                  color: THEME_COLOR_PRIMARY,
+                  borderColor: THEME_COLOR_OUTLINE
+                },
+                textStyle: { fontSize: labelFontSize }
+              }
+            ],
+            visualMap: {
+              type: 'piecewise',
+              show: false,
+              dimension: 1,
+              pieces: [
+                { lt: 8, color: PRICE_COLOR_LOW },
+                { gte: 8, lt: 15, color: PRICE_COLOR_MEDIUM },
+                { gte: 15, color: PRICE_COLOR_HIGH }
+              ]
+            },
+            series: [this._getSeriesOption()]
+          };
+        }
+
+        _getSeriesOption() {
+          const seriesConfig = {
+            name: 'Price',
+            data: this.currentData,
+            type: this.chartType
+          };
+          if (this.chartType === 'line') {
+            seriesConfig.smooth = true;
+            seriesConfig.showSymbol = false;
+            seriesConfig.lineStyle = { width: 3 };
+            seriesConfig.areaStyle = {};
+          }
+          return seriesConfig;
+        }
+
+        setChartType(type) {
+          if (type === this.chartType) return;
+          this.chartType = type;
+          this.chart.setOption({ series: [this._getSeriesOption()] });
+        }
+
+        setZoom(hours) {
+          if (!this.chart || typeof hours !== 'number' || hours <= 0 || hours > 24) return;
+          const startPercent = Math.max(0, 100 - (hours / 24) * 100);
+          this.chart.dispatchAction({
+            type: 'dataZoom',
+            start: startPercent,
+            end: 100
+          });
+          this.lastSelectedHours = hours;
+          this.updateSelectedAverage();
+        }
+
+        resizeChart() {
+          if (this.chart) {
+            this.chart.setOption(this._getResponsiveOptions());
+            this.chart.resize();
+          }
+        }
+
+        initializeChart() {
+          this.chart.setOption(this._getResponsiveOptions());
+        }
+
+        updateData(data) {
+          this.currentData = data;
+          const option = { series: [this._getSeriesOption()] };
+          this.chart.setOption(option);
+
+          if (this.isInitialLoad && data.length > 0) {
+            this.setZoom(3);
+            this.isInitialLoad = false;
+          }
+          this.updateSelectedAverage();
+        }
+
+        updateSelectedAverage() {
+          const card = document.querySelector('price-card[title="Selected Range"]');
+          if (!card || !this.currentData.length) return;
+          // Determine visible time range from xAxis scale
+          const xAxisModel = this.chart.getModel().getComponent('xAxis');
+          if (!xAxisModel) return;
+          const extent = xAxisModel.axis.scale.getExtent();
+          const [minTime, maxTime] = extent;
+          // Filter data points within range
+          const visiblePoints = this.currentData.filter((d) => d[0] >= minTime && d[0] <= maxTime);
+          if (!visiblePoints.length) return;
+          const avg = visiblePoints.reduce((acc, d) => acc + d[1], 0) / visiblePoints.length;
+          card.setPrice(avg);
+          // Title logic: precise timespan
+          const startDate = new Date(minTime);
+          const endDate = new Date(maxTime);
+          const sameDay = startDate.toDateString() === endDate.toDateString();
+          const pad = (n) => n.toString().padStart(2, '0');
+          const fmtTime = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          const fmtDay = (d) => d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          let title;
+          if (minTime === maxTime) {
+            title = `${sameDay ? fmtDay(startDate) + ' ' : ''}${fmtTime(startDate)}`;
+          } else if (sameDay) {
+            title = `${fmtTime(startDate)}-${fmtTime(endDate)}`;
+          } else {
+            title = `${fmtDay(startDate)} ${fmtTime(startDate)}–${fmtDay(endDate)} ${fmtTime(endDate)}`;
+          }
+          card.setCardTitle(title);
+        }
+      }
+      customElements.define('price-chart', PriceChart);
+
+      async function fetchData(apiUrl) {
+        //const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        //const url = `${proxyUrl}${encodeURIComponent(apiUrl)}`;
+        //console.log(`Fetching data from: ${url}`);
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`Failed to fetch data: ${response.statusText}`);
+        return await response.json();
+      }
+
+      async function updateDisplay() {
+        try {
+          const [fiveMinuteFeed, currentHourAverage] = await Promise.all([fetchData('/5minutefeed'), fetchData('/currenthouraverage')]);
+          const now = Date.now();
+          const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const last24hData = fiveMinuteFeed.filter((d) => parseInt(d.millisUTC) > twentyFourHoursAgo);
+          const todayData = last24hData.filter((d) => parseInt(d.millisUTC) > todayStart.getTime());
+          const calculateAverage = (data) => {
+            if (!data || data.length === 0) return NaN;
+            return data.reduce((acc, curr) => acc + parseFloat(curr.price), 0) / data.length;
+          };
+          document.querySelector('price-card[title="Current Hour"]').setPrice(currentHourAverage[0].price);
+          document.querySelector('price-card[title="Last 24 Hours"]').setPrice(calculateAverage(last24hData));
+          const chartData = last24hData.map((d) => [parseInt(d.millisUTC), parseFloat(d.price)]);
+          document.querySelector('price-chart').updateData(chartData);
+          debounce(() => {
+            document.querySelector('price-chart').resizeChart();
+          }, 150);
+        } catch (error) {
+          console.error('Error updating data:', error);
+        }
+      }
+
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      function init() {
+        const priceChart = document.querySelector('price-chart');
+        const zoomControls = document.querySelector('.zoom-controls');
+        const typeControls = document.querySelector('.type-controls');
+
+        zoomControls.addEventListener('click', (event) => {
+          const button = event.target.closest('button');
+          if (!button || !button.dataset.hours) return;
+          zoomControls.querySelector('.active')?.classList.remove('active');
+          button.classList.add('active');
+          const hours = parseInt(button.dataset.hours, 10);
+          priceChart.setZoom(hours);
+        });
+
+        typeControls.addEventListener('click', (event) => {
+          const button = event.target.closest('button');
+          if (!button) return;
+          typeControls.querySelector('.active')?.classList.remove('active');
+          button.classList.add('active');
+          const chartType = button.id === 'bar-chart-btn' ? 'bar' : 'line';
+          priceChart.setChartType(chartType);
+        });
+
+        const debouncedResize = debounce(() => {
+          priceChart.resizeChart();
+        }, 150);
+        window.addEventListener('resize', debouncedResize);
+
+        updateDisplay();
+        setInterval(updateDisplay, 60000);
+        debouncedResize();
+
+        /* auto-refresh when idle, useful when used as PWA on the homescreen of iOS */
+
+        let lastActivityTime = Date.now();
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            const currentTime = Date.now();
+            const timeSinceLastActivity = currentTime - lastActivityTime;
+            const reloadThreshold = 1 * 60 * 1000; // 1 minute
+
+            if (timeSinceLastActivity > reloadThreshold) {
+              console.log('App reactivated at ' + currentTime + ', reloading data...');
+              updateDisplay();
+              debouncedResize();
+            }
+            lastActivityTime = currentTime;
+          } else {
+            lastActivityTime = Date.now();
+          }
+        });
+      }
+
+      init();
+    </script>
+  </body>
+</html>

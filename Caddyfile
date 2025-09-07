@@ -1,0 +1,35 @@
+:8123
+
+@api-preflight {
+  method OPTIONS
+  path /5minutefeed /currenthouraverage
+}
+handle @api-preflight {
+  header Access-Control-Allow-Origin "*"
+  header Access-Control-Allow-Methods "GET, OPTIONS"
+  header Access-Control-Allow-Headers "*"
+  respond 204
+}
+
+handle_path /5minutefeed {
+  header Access-Control-Allow-Origin "*"
+  header Access-Control-Allow-Methods "GET, OPTIONS"
+  header Access-Control-Allow-Headers "*"
+  rewrite * /api?type=5minutefeed&{query}
+  reverse_proxy https://hourlypricing.comed.com {
+    header_up Host {upstream_hostport}
+  }
+}
+
+handle_path /currenthouraverage {
+  header Access-Control-Allow-Origin "*"
+  header Access-Control-Allow-Methods "GET, OPTIONS"
+  header Access-Control-Allow-Headers "*"
+  rewrite * /api?type=currenthouraverage&{query}
+  reverse_proxy https://hourlypricing.comed.com {
+    header_up Host {upstream_hostport}
+  }
+}
+
+root * /srv
+file_server
