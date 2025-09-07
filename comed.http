@@ -1,0 +1,9 @@
+###
+# Sample direct request (may be blocked by CORS policy if used in Javascript)
+GET https://hourlypricing.comed.com/api?type=5minutefeed
+Accept: application/json
+
+###
+# Using the Caddyfile CORS proxy
+GET https://comed.y0.io/5minutefeed?format=text
+Accept: application/json

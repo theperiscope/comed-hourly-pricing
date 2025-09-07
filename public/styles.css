@@ -1,0 +1,150 @@
+:root {
+  --text-color: #003f5c;
+  --text-color-inverse: #f8f8f8;
+
+  /* modernfontstacks.com: Industrial */
+  --body-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
+  --body-background-color: #fffbfe;
+  --body-background-color-layerup: #e7e0ec;
+  --body-text-color: #1c1b1f;
+
+  --chart-background-color: #fffbfe;
+  --chart-text-color: #1c1b1f;
+  --chart-text-color-secondary: #49454f;
+  --chart-grid-line-color: #cac4d0;
+  --chart-tooltip-background-color: rgba(255, 251, 254, 0.98);
+  --chart-tooltip-border-color: rgba(121, 116, 126, 0.4);
+
+  --chart-button-background-color: transparent;
+  --chart-button-text-color: #21005d;
+  --chart-button-border-color: #79747e;
+  --chart-button-background-color-active: #fffbfe;
+
+  --price-color-low: #2f4b7c;
+  --price-color-medium: #ff7c43;
+  --price-color-high: #d45087;
+  --price-color-default: var(--price-color-low);
+
+}
+:root.dark {
+  --text-color: #f8f8f8;
+  --text-color-inverse: #003f5c;
+
+  --body-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
+  --body-background-color: #1c1b1f;
+  --body-background-color-layerup: #313033;
+  --body-text-color: #e7e0ec;
+
+  --chart-background-color: #1c1b1f;
+  --chart-text-color: #e7e0ec;
+  --chart-text-color-secondary: #cac4d0;
+  --chart-grid-line-color: #49454f;
+  --chart-tooltip-background-color: rgba(28, 27, 31, 0.98);
+  --chart-tooltip-border-color: rgba(121, 116, 126, 0.4);
+
+  --chart-button-background-color: transparent;
+  --chart-button-text-color: #d0bcff;
+  --chart-button-border-color: #938f99;
+  --chart-button-background-color-active: #1c1b1f;
+
+  /* darker hues based on light color with 80-transparency */
+  --price-color-low: #3a4660;
+  --price-color-medium: #985c3e;
+  --price-color-high: #8d4463;
+  --price-color-default: var(--price-color-low);
+}
+html {
+  height: 100%;
+  overflow: hidden;
+}
+@media (max-width: 428px) and (orientation: portrait) {
+  html {
+    font-size: 12px;
+  }
+}
+body {
+  height: 100%;
+  font-family: var(--body-font-family);
+  background-color: var(--body-background-color);
+  color: var(--body-text-color);
+  margin: 0;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body { transition: none !important; }
+  price-card { transition: none !important; }
+  .chart-controls button { transition: none !important; }
+}
+.container {
+  max-width: calc(100vw - 2rem);
+  margin: 0 auto;
+  height: 100%;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(3, 1fr); /* Always three columns */
+  grid-template-rows: auto 1fr; /* Cards row + chart fills remaining */
+}
+price-card {
+  /* Allow JS to set a themed background via CSS custom prop */
+  background-color: var(--price-card-background, var(--body-background-color-layerup));
+  color: var(--body-text-color);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: background-color 0.5s ease;
+}
+.chart-container {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  background-color: var(--body-background-color-layerup);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  max-width: calc(100vw - 2rem);
+}
+.chart-controls-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+.chart-controls { display: flex; }
+.chart-controls button {
+  font-family: var(--body-font-family);
+  font-size: 0.875rem;
+  font-weight: 400;
+  border: 1px solid var(--chart-button-border-color);
+  background-color: var(--chart-button-background-color);
+  color: var(--chart-button-text-color);
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: -1px;
+}
+.chart-controls button:first-child {
+  margin-left: 0;
+  border-top-left-radius: 1.5rem;
+  border-bottom-left-radius: 1.5rem;
+}
+.chart-controls button:last-child {
+  border-top-right-radius: 1.5rem;
+  border-bottom-right-radius: 1.5rem;
+}
+.chart-controls button.active {
+  background-color: var(--chart-button-background-color-active);
+  font-weight: 700;
+}
+price-chart {
+  display: block;
+  max-width: 100vw;
+  flex-grow: 1;
+  max-height: 100%; /* Fill the flexible parent container */
+}

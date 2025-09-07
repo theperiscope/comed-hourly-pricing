@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comed 5-Minute Electricity Prices (¢/kWh)</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fffbfe" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1b1f" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="android-chrome-512x512.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="manifest" href="site.webmanifest" />
+    <script>
+      // Apply initial color scheme ASAP (before CSS loads) to avoid FOUC and ensure CSS variables reflect the right theme.
+      (function () {
+        try {
+          var mql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+          var isDark = mql && mql.matches;
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+          } else {
+            root.classList.remove('dark');
+          }
+        } catch (e) {
+          /* no-op */
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="echarts.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <price-card title="Current Hour"></price-card>
+      <price-card title="Selected Range"></price-card>
+      <price-card title="Last 24 Hours"></price-card>
+
+      <div class="chart-container">
+        <div class="chart-controls-wrapper">
+          <div class="chart-controls zoom-controls">
+            <button data-hours="24">24h</button>
+            <button data-hours="12">12h</button>
+            <button data-hours="8">8h</button>
+            <button data-hours="6">6h</button>
+            <button data-hours="4">4h</button>
+            <button data-hours="3" class="active">3h</button>
+            <button data-hours="2">2h</button>
+            <button data-hours="1">1h</button>
+          </div>
+          <div class="chart-controls type-controls">
+            <button id="bar-chart-btn" class="active">Bar</button>
+            <button id="line-chart-btn">Line</button>
+          </div>
+        </div>
+        <price-chart></price-chart>
+      </div>
+    </div>
+
+    <template id="price-card-template">
+      <style>
+        :host {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
+        .title {
+          font-size: 1.1rem;
+          font-weight: 500;
+
+          background: inherit;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          filter:
+            sepia(5)      /* add some color to grey so the rest works */
+            saturate(100) /* increase strength of color channels */
+            invert(1)     /* invert the color */
+            grayscale(1)  /* make it grey */
+            contrast(9);  /* make it black/white */
+
+        }
+        .price {
+          font-size: 3rem;
+          font-weight: 900;
+
+          background: inherit;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          filter:
+            sepia(5)      /* add some color to grey so the rest works */
+            saturate(100) /* increase strength of color channels */
+            invert(1)     /* invert the color */
+            grayscale(1)  /* make it grey */
+            contrast(9);  /* make it black/white */
+        }
+        /* CSS spinner from https://cssloaders.github.io/ */
+        .loader {
+          width: 48px;
+          height: 48px;
+          border: 5px solid #fff;
+          border-bottom-color: transparent;
+          border-radius: 50%;
+          display: inline-block;
+          box-sizing: border-box;
+          animation: rotation 1s linear infinite;
+          padding: 7px 0 8px 0; /* price font size makes for 63px => 48 + 7 + 8 */
+        }
+
+        @keyframes rotation {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .loader {
+            animation: none !important;
+          }
+          .title,
+          .price {
+            transition: none !important;
+          }
+        }
+      </style>
+      <div class="title"></div>
+      <div class="price">
+        <span class="loader"></span>
+      </div>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
