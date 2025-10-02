@@ -36,6 +36,16 @@
   </head>
   <body>
     <div class="container">
+      <div class="menu-root" id="menu-root">
+        <button id="menu-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="app-menu" title="Menu">
+          <span class="sr-only">Open menu</span>
+          <span class="hamburger"></span>
+        </button>
+        <div id="app-menu" class="menu" role="menu" aria-label="Application menu">
+          <button role="menuitem" id="menu-toggle-theme">Toggle light/dark mode</button>
+          <button role="menuitem" id="menu-reload">Reload page</button>
+        </div>
+      </div>
       <price-card title="Current Hour"></price-card>
       <price-card title="Selected Range"></price-card>
       <price-card title="Last 24 Hours"></price-card>

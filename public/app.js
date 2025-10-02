@@ -4,8 +4,8 @@ const DOM = {
   cards: {
     currentHour: null,
     selectedRange: null,
-    last24Hours: null,
-  },
+    last24Hours: null
+  }
 };
 
 const DATE_FMT = new Intl.DateTimeFormat([], { month: 'short', day: 'numeric' });
@@ -48,7 +48,7 @@ const PRICE_COLORS = {
   low: () => getCSSVar('--price-color-low') || '#2f4b7c',
   medium: () => getCSSVar('--price-color-medium') || '#ff7c43',
   high: () => getCSSVar('--price-color-high') || '#d45087',
-  def: () => getCSSVar('--price-color-default') || getCSSVar('--price-color-low') || '#2f4b7c',
+  def: () => getCSSVar('--price-color-default') || getCSSVar('--price-color-low') || '#2f4b7c'
 };
 const PRICE_THRESHOLD_LOW = 8;
 const PRICE_THRESHOLD_HIGH = 15;
@@ -124,7 +124,7 @@ class PriceChart extends HTMLElement {
         left: 'center',
         text: 'Comed 5-Minute Electricity Prices (¢/kWh)',
         textStyle: { fontSize: 1.4 * rootFontSize, color: getCSSVar('--chart-text-color') },
-        top: 0,
+        top: 0
       },
       toolbox: {
         right: 5,
@@ -134,9 +134,9 @@ class PriceChart extends HTMLElement {
           saveAsImage: {
             type: 'svg',
             name: 'comed-5-minute-prices',
-            title: 'Save',
-          },
-        },
+            title: 'Save'
+          }
+        }
       },
       tooltip: {
         trigger: 'axis',
@@ -147,7 +147,7 @@ class PriceChart extends HTMLElement {
           type: 'cross',
           lineStyle: { color: getCSSVar('--chart-tooltip-border-color') },
           crossStyle: { color: getCSSVar('--chart-tooltip-border-color') },
-          label: { color: getCSSVar('--chart-text-color'), backgroundColor: getCSSVar('--chart-tooltip-background-color') },
+          label: { color: getCSSVar('--chart-text-color'), backgroundColor: getCSSVar('--chart-tooltip-background-color') }
         },
         textStyle: { fontSize: labelFontSize, color: getCSSVar('--chart-text-color') },
         formatter: function (params) {
@@ -158,13 +158,13 @@ class PriceChart extends HTMLElement {
           const value = parseFloat(param.value[1]).toFixed(1);
 
           return `${dateString}, ${timeString}<br/>${param.marker}<strong>${value} ¢</strong>`;
-        },
+        }
       },
       grid: {
         left: '50px',
         right: '1%',
         top: '40px',
-        bottom: '130px', // increased to accommodate dataZoom
+        bottom: '130px' // increased to accommodate dataZoom
       },
       xAxis: {
         type: 'time',
@@ -178,7 +178,7 @@ class PriceChart extends HTMLElement {
           color: getCSSVar('--chart-text-color'),
           formatter: function (value) {
             return TIME_FMT_24.format(new Date(value));
-          },
+          }
         },
         // Controls the floating label that appears on the X axis when hovering (crosshair)
         axisPointer: {
@@ -187,9 +187,9 @@ class PriceChart extends HTMLElement {
             formatter: function (params) {
               const date = new Date(params.value);
               return `${TIME_FMT_24.format(date)}`;
-            },
-          },
-        },
+            }
+          }
+        }
       },
       yAxis: {
         type: 'value',
@@ -207,15 +207,15 @@ class PriceChart extends HTMLElement {
             formatter: function (params) {
               const v = Number(params.value);
               return isFinite(v) ? `${v.toFixed(1)} ¢/kWh` : '';
-            },
-          },
-        },
+            }
+          }
+        }
       },
       dataZoom: [
         {
           type: 'inside',
           orient: 'horizontal',
-          xAxisIndex: 0,
+          xAxisIndex: 0
         },
         {
           type: 'slider',
@@ -226,13 +226,13 @@ class PriceChart extends HTMLElement {
           borderColor: '#00000000',
           dataBackground: {
             areaStyle: { color: '#00000000' }, // eCharts 6 has problems rendering the area style correctly
-            lineStyle: { width: 0.5 },
+            lineStyle: { width: 0.5 }
           },
           selectedDataBackground: {
             areaStyle: { color: '#00000000' }, // eCharts 6 has problems rendering the area style correctly
-            lineStyle: { width: 2 },
-          },
-        },
+            lineStyle: { width: 2 }
+          }
+        }
       ],
       visualMap: {
         type: 'piecewise',
@@ -241,10 +241,10 @@ class PriceChart extends HTMLElement {
         pieces: [
           { lt: PRICE_THRESHOLD_LOW, color: PRICE_COLORS.low() },
           { gte: PRICE_THRESHOLD_LOW, lt: PRICE_THRESHOLD_HIGH, color: PRICE_COLORS.medium() },
-          { gte: PRICE_THRESHOLD_HIGH, color: PRICE_COLORS.high() },
-        ],
+          { gte: PRICE_THRESHOLD_HIGH, color: PRICE_COLORS.high() }
+        ]
       },
-      series: [this._getSeriesOption()],
+      series: [this._getSeriesOption()]
     };
   }
 
@@ -252,7 +252,7 @@ class PriceChart extends HTMLElement {
     const seriesConfig = {
       name: 'Price',
       data: this.currentData,
-      type: this.chartType,
+      type: this.chartType
     };
     if (this.chartType === 'line') {
       seriesConfig.smooth = true;
@@ -275,7 +275,7 @@ class PriceChart extends HTMLElement {
     this.chart.dispatchAction({
       type: 'dataZoom',
       start: startPercent,
-      end: 100,
+      end: 100
     });
     this.lastSelectedHours = hours;
     this.updateSelectedAverage();
@@ -383,8 +383,7 @@ function init() {
 
   applyDarkMode(isDarkMode());
   const media = darkModeMatch();
-  const onSchemeChange = (e) => {
-    applyDarkMode(e.matches);
+  const refreshThemeUI = () => {
     // re-apply chart options so it picks up new CSS variables, then resize
     priceChart?.refreshTheme();
     priceChart?.resizeChart();
@@ -399,11 +398,64 @@ function init() {
       priceChart.setZoom(hours);
     }
   };
+  const onSchemeChange = (e) => {
+    applyDarkMode(e.matches);
+    refreshThemeUI();
+  };
+
+  const initMenu = () => {
+    const menuRoot = document.getElementById('menu-root');
+    const menuToggleBtn = document.getElementById('menu-toggle');
+    const menuToggleTheme = document.getElementById('menu-toggle-theme');
+    const menuReload = document.getElementById('menu-reload');
+
+    const closeMenu = () => {
+      menuRoot?.classList.remove('open');
+      if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
+    };
+    const openMenu = () => {
+      menuRoot?.classList.add('open');
+      if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'true');
+    };
+    const toggleMenu = () => {
+      if (menuRoot?.classList.contains('open')) closeMenu();
+      else openMenu();
+    };
+
+    menuToggleBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+    // close on outside click
+    document.addEventListener('click', (e) => {
+      if (!menuRoot || !menuRoot.classList.contains('open')) return;
+      if (!menuRoot.contains(e.target)) closeMenu();
+    });
+    // close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    // toggle theme: flip current class independent of system preference
+    menuToggleTheme?.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      refreshThemeUI();
+      closeMenu();
+    });
+
+    // reload action
+    menuReload?.addEventListener('click', () => {
+      location.reload();
+    });
+  };
+
   if (media && media.addEventListener) {
     media.addEventListener('change', onSchemeChange);
   } else if (media && media.addListener) {
     media.addListener(onSchemeChange);
   }
+
+  initMenu();
 
   zoomControls.addEventListener('click', (event) => {
     const button = event.target.closest('button');

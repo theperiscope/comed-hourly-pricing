@@ -1,4 +1,5 @@
 :root {
+  --lighen-darken-percent: 10%;
   --text-color: #003f5c;
   --text-color-inverse: #f8f8f8;
 
@@ -25,6 +26,12 @@
   --price-color-high: #d45087;
   --price-color-default: var(--price-color-low);
 
+  --menu-border-color: var(--chart-button-border-color);
+  --menu-base-background-color: var(--body-background-color);
+  --menu-background-color: var(--body-background-color-layerup);
+  --menu-text-color: var(--body-text-color);
+  --menu-highlight-background-color: var(--body-background-color);
+  --menu-highlight-text-color: var(--body-text-color);
 }
 :root.dark {
   --text-color: #f8f8f8;
@@ -52,6 +59,13 @@
   --price-color-medium: #985c3e;
   --price-color-high: #8d4463;
   --price-color-default: var(--price-color-low);
+
+  --menu-base-background-color: var(--body-background-color);
+  --menu-background-color: var(--body-background-color-layerup);
+  --menu-text-color: var(--body-text-color);
+  --menu-highlight-background-color: var(--body-background-color);
+  /*--menu-highlight-background-color: color-mix(in srgb, var(--body-background-color-layerup), #fff var(--lighen-darken-percent));*/
+  --menu-highlight-text-color: var(--body-text-color);
 }
 html {
   height: 100%;
@@ -74,9 +88,15 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  body { transition: none !important; }
-  price-card { transition: none !important; }
-  .chart-controls button { transition: none !important; }
+  body {
+    transition: none !important;
+  }
+  price-card {
+    transition: none !important;
+  }
+  .chart-controls button {
+    transition: none !important;
+  }
 }
 .container {
   max-width: calc(100vw - 2rem);
@@ -84,7 +104,7 @@ body {
   height: 100%;
   display: grid;
   gap: 0.5rem;
-  grid-template-columns: repeat(3, 1fr); /* Always three columns */
+  grid-template-columns: auto repeat(3, 1fr); /* Menu (auto) + three cards */
   grid-template-rows: auto 1fr; /* Cards row + chart fills remaining */
 }
 price-card {
@@ -116,7 +136,9 @@ price-card {
   margin-bottom: 0.5rem;
   gap: 1rem;
 }
-.chart-controls { display: flex; }
+.chart-controls {
+  display: flex;
+}
 .chart-controls button {
   font-family: var(--body-font-family);
   font-size: 0.875rem;
@@ -147,4 +169,110 @@ price-chart {
   max-width: 100vw;
   flex-grow: 1;
   max-height: 100%; /* Fill the flexible parent container */
+}
+
+/* accessible screen-reader-only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* menu styles */
+.menu-root {
+  /* inline grid item like a card */
+  background-color: var(--body-background-color-layerup);
+  color: var(--body-text-color);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* anchor dropdown */
+}
+
+#menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  background-color: var(--menu-base-background-color);
+  color: var(--menu-text-color);
+  border: 1px solid var(--chart-button-border-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+#menu-toggle .hamburger,
+#menu-toggle .hamburger::before,
+#menu-toggle .hamburger::after {
+  content: '';
+  display: block;
+  width: 1.8rem;
+  height: 0.18rem;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: transform 0.2s ease;
+}
+
+#menu-toggle .hamburger {
+  position: relative;
+}
+
+#menu-toggle .hamburger::before {
+  position: absolute;
+  top: -0.5rem;
+}
+
+#menu-toggle .hamburger::after {
+  position: absolute;
+  top: 0.5rem;
+}
+
+.menu {
+  position: absolute;
+  top: calc(4rem + 1rem); /* button height + top padding + gap */
+  left: 0;
+  min-width: 14rem;
+  padding: 0.25rem;
+  background-color: var(--menu-background-color);
+  color: var(--menu-text-color);
+  border: 1px solid var(--menu-border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 100;
+}
+
+.menu-root.open .menu {
+  display: block;
+}
+
+.menu button[role='menuitem'] {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.9rem 1rem;
+  border-radius: 0.4rem;
+  font-family: var(--body-font-family);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.menu button[role='menuitem']:hover,
+.menu button[role='menuitem']:focus {
+  background-color: var(--menu-highlight-background-color);
+  color: var(--menu-highlight-text-color);
+  outline: none;
 }
