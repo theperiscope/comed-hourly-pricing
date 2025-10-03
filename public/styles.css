@@ -1,71 +1,47 @@
 :root {
-  --lighen-darken-percent: 10%;
-  --text-color: #003f5c;
-  --text-color-inverse: #f8f8f8;
-
   /* modernfontstacks.com: Industrial */
-  --body-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
-  --body-background-color: #fffbfe;
-  --body-background-color-layerup: #e7e0ec;
-  --body-text-color: #1c1b1f;
+  --theme-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
 
-  --chart-background-color: #fffbfe;
-  --chart-text-color: #1c1b1f;
-  --chart-text-color-secondary: #49454f;
-  --chart-grid-line-color: #cac4d0;
-  --chart-tooltip-background-color: rgba(255, 251, 254, 0.98);
-  --chart-tooltip-border-color: rgba(121, 116, 126, 0.4);
-
-  --chart-button-background-color: transparent;
-  --chart-button-text-color: #21005d;
-  --chart-button-border-color: #79747e;
-  --chart-button-background-color-active: #fffbfe;
-
+  --theme-border-color: #79747e;
+  --theme-gridline-color: #cac4d0;
+  --theme-background-color-base: #fffbfe;
+  --theme-background-color-layerup: #e7e0ec;
+  --theme-text-color-base: #1c1b1f;
+  --theme-text-color-layerup: #49454f;
   --price-color-low: #2f4b7c;
   --price-color-medium: #ff7c43;
   --price-color-high: #d45087;
   --price-color-default: var(--price-color-low);
 
-  --menu-border-color: var(--chart-button-border-color);
-  --menu-base-background-color: var(--body-background-color);
-  --menu-background-color: var(--body-background-color-layerup);
-  --menu-text-color: var(--body-text-color);
-  --menu-highlight-background-color: var(--body-background-color);
-  --menu-highlight-text-color: var(--body-text-color);
-}
-:root.dark {
-  --text-color: #f8f8f8;
-  --text-color-inverse: #003f5c;
-
-  --body-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
-  --body-background-color: #1c1b1f;
-  --body-background-color-layerup: #313033;
-  --body-text-color: #e7e0ec;
-
-  --chart-background-color: #1c1b1f;
-  --chart-text-color: #e7e0ec;
-  --chart-text-color-secondary: #cac4d0;
-  --chart-grid-line-color: #49454f;
-  --chart-tooltip-background-color: rgba(28, 27, 31, 0.98);
-  --chart-tooltip-border-color: rgba(121, 116, 126, 0.4);
+  --chart-background-color: var(--theme-background-color-base);
+  --chart-text-color: var(--theme-text-color-base);
+  --chart-grid-line-color: var(--theme-gridline-color);
+  --chart-tooltip-background-color: var(--theme-background-color-base);
+  --chart-tooltip-border-color: var(--theme-border-color);
 
   --chart-button-background-color: transparent;
-  --chart-button-text-color: #d0bcff;
-  --chart-button-border-color: #938f99;
-  --chart-button-background-color-active: #1c1b1f;
+  --chart-button-text-color: var(--theme-text-color-layerup);
+  --chart-button-border-color: var(--theme-border-color);
+  --chart-button-background-color-active: var(--theme-background-color-base);
 
-  /* darker hues based on light color with 80-transparency */
-  --price-color-low: #3a4660;
-  --price-color-medium: #985c3e;
-  --price-color-high: #8d4463;
-  --price-color-default: var(--price-color-low);
-
-  --menu-base-background-color: var(--body-background-color);
-  --menu-background-color: var(--body-background-color-layerup);
-  --menu-text-color: var(--body-text-color);
-  --menu-highlight-background-color: var(--body-background-color);
-  /*--menu-highlight-background-color: color-mix(in srgb, var(--body-background-color-layerup), #fff var(--lighen-darken-percent));*/
-  --menu-highlight-text-color: var(--body-text-color);
+  --menu-border-color: var(--theme-border-color);
+  --menu-base-background-color: var(--theme-background-color-base);
+  --menu-background-color: var(--theme-background-color-layerup);
+  --menu-text-color: var(--theme-text-color-base);
+  --menu-highlight-background-color: var(--theme-background-color-base);
+  --menu-highlight-text-color: var(--theme-text-color-base);
+}
+:root.dark {
+  --theme-border-color: #938f99;
+  --theme-gridline-color: #49454f;
+  --theme-background-color-base: #1c1b1f;
+  --theme-background-color-layerup: #313033;
+  --theme-text-color-base: #e7e0ec;
+  --theme-text-color-layerup: #b6bab1;
+  /* darken hues based on light color with 15% black mixed in */
+  --price-color-low: color-mix(in srgb, var(--price-color-low), #000 15%);
+  --price-color-medium: color-mix(in srgb, var(--price-color-medium), #000 15%);
+  --price-color-high: color-mix(in srgb, var(--price-color-high), #000 15%);
 }
 html {
   height: 100%;
@@ -78,9 +54,9 @@ html {
 }
 body {
   height: 100%;
-  font-family: var(--body-font-family);
-  background-color: var(--body-background-color);
-  color: var(--body-text-color);
+  font-family: var(--theme-font-family);
+  background-color: var(--theme-background-color-base);
+  color: var(--theme-text-color-base);
   margin: 0;
   padding: 0.5rem;
   box-sizing: border-box;
@@ -109,20 +85,18 @@ body {
 }
 price-card {
   /* Allow JS to set a themed background via CSS custom prop */
-  background-color: var(--price-card-background, var(--body-background-color-layerup));
-  color: var(--body-text-color);
+  background-color: var(--price-card-background, var(--theme-background-color-layerup));
+  color: var(--theme-text-color-base);
   border-radius: 0.75rem;
   padding: 0.5rem 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: background-color 0.5s ease;
 }
 .chart-container {
   grid-column: 1 / -1;
   grid-row: 2;
-  background-color: var(--body-background-color-layerup);
+  background-color: var(--theme-background-color-layerup);
   border-radius: 0.75rem;
   padding: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   display: flex;
   flex-direction: column;
   min-height: 300px;
@@ -140,7 +114,7 @@ price-card {
   display: flex;
 }
 .chart-controls button {
-  font-family: var(--body-font-family);
+  font-family: var(--theme-font-family);
   font-size: 0.875rem;
   font-weight: 400;
   border: 1px solid var(--chart-button-border-color);
@@ -187,11 +161,10 @@ price-chart {
 /* menu styles */
 .menu-root {
   /* inline grid item like a card */
-  background-color: var(--body-background-color-layerup);
-  color: var(--body-text-color);
+  background-color: var(--theme-background-color-layerup);
+  color: var(--theme-text-color-base);
   border-radius: 0.75rem;
   padding: 0.5rem 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,7 +220,6 @@ price-chart {
   color: var(--menu-text-color);
   border: 1px solid var(--menu-border-color);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   display: none;
   z-index: 100;
 }
@@ -265,7 +237,7 @@ price-chart {
   color: inherit;
   padding: 0.9rem 1rem;
   border-radius: 0.4rem;
-  font-family: var(--body-font-family);
+  font-family: var(--theme-font-family);
   font-size: 1rem;
   cursor: pointer;
 }
