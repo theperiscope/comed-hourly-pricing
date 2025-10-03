@@ -43,12 +43,12 @@ function hexToRgba(hex, alpha = 1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// price colors from CSS variables (fallback to hardcoded values if missing)
+// price colors from CSS variables (deterministic, no JS fallbacks)
 const PRICE_COLORS = {
-  low: () => getCSSVar('--price-color-low') || '#2f4b7c',
-  medium: () => getCSSVar('--price-color-medium') || '#ff7c43',
-  high: () => getCSSVar('--price-color-high') || '#d45087',
-  def: () => getCSSVar('--price-color-default') || getCSSVar('--price-color-low') || '#2f4b7c'
+  low: () => getCSSVar('--price-color-low'),
+  medium: () => getCSSVar('--price-color-medium'),
+  high: () => getCSSVar('--price-color-high'),
+  def: () => getCSSVar('--price-color-default')
 };
 const PRICE_THRESHOLD_LOW = 8;
 const PRICE_THRESHOLD_HIGH = 15;
@@ -107,7 +107,7 @@ class PriceChart extends HTMLElement {
     this.chart.on('dataZoom', () => {
       this.updateSelectedAverage();
     });
-    // Observe host size changes
+    // observe host size changes
     this._resizeObserver = new ResizeObserver(() => this.resizeChart());
     this._resizeObserver.observe(this);
   }
@@ -200,7 +200,7 @@ class PriceChart extends HTMLElement {
         axisLine: { lineStyle: { color: getCSSVar('--chart-grid-line-color') } },
         splitLine: { show: true, lineStyle: { color: getCSSVar('--chart-grid-line-color') } },
         axisLabel: { formatter: '{value} ¢', fontSize: labelFontSize, color: getCSSVar('--chart-text-color') },
-        // Controls the floating label that appears on the Y axis when hovering (crosshair)
+        // controls the floating label that appears on the Y axis when hovering (crosshair)
         axisPointer: {
           label: {
             show: true,
@@ -212,11 +212,7 @@ class PriceChart extends HTMLElement {
         }
       },
       dataZoom: [
-        {
-          type: 'inside',
-          orient: 'horizontal',
-          xAxisIndex: 0
-        },
+        { type: 'inside', orient: 'horizontal', xAxisIndex: 0 },
         {
           type: 'slider',
           xAxisIndex: 0,
@@ -249,11 +245,7 @@ class PriceChart extends HTMLElement {
   }
 
   _getSeriesOption() {
-    const seriesConfig = {
-      name: 'Price',
-      data: this.currentData,
-      type: this.chartType
-    };
+    const seriesConfig = { name: 'Price', data: this.currentData, type: this.chartType };
     if (this.chartType === 'line') {
       seriesConfig.smooth = true;
       seriesConfig.showSymbol = false;
@@ -272,19 +264,13 @@ class PriceChart extends HTMLElement {
   setZoom(hours) {
     if (!this.chart || typeof hours !== 'number' || hours <= 0 || hours > 24) return;
     const startPercent = Math.max(0, 100 - (hours / 24) * 100);
-    this.chart.dispatchAction({
-      type: 'dataZoom',
-      start: startPercent,
-      end: 100
-    });
+    this.chart.dispatchAction({ type: 'dataZoom', start: startPercent, end: 100 });
     this.lastSelectedHours = hours;
     this.updateSelectedAverage();
   }
 
   resizeChart() {
-    if (this.chart) {
-      this.chart.resize();
-    }
+    if (this.chart) this.chart.resize();
   }
 
   initializeChart() {
@@ -371,6 +357,77 @@ async function updateDisplay() {
   }
 }
 
+function refreshThemeUI() {
+  const priceChart = DOM.priceChart || document.querySelector('price-chart');
+  // re-apply chart options so it picks up new CSS variables, then resize
+  priceChart?.refreshTheme();
+  priceChart?.resizeChart();
+
+  // refresh price-card backgrounds based on stored values
+  DOM.cards.currentHour?.refreshThemeBackground?.();
+  DOM.cards.selectedRange?.refreshThemeBackground?.();
+  DOM.cards.last24Hours?.refreshThemeBackground?.();
+
+  // re-apply zoom to fix any potential layout issues after theme change
+  const zoomControls = document.querySelector('.zoom-controls');
+  const activeBtn = document.querySelector('.zoom-controls button.active') || zoomControls?.querySelector('button[data-hours="3"]');
+  if (activeBtn && activeBtn.dataset.hours) {
+    const hours = parseInt(activeBtn.dataset.hours, 10);
+    if (Number.isFinite(hours)) priceChart?.setZoom(hours);
+  }
+}
+
+function onSchemeChange(e) {
+  applyDarkMode(e.matches);
+  refreshThemeUI();
+}
+
+function initMenu() {
+  const menuRoot = document.getElementById('menu-root');
+  const menuToggleBtn = document.getElementById('menu-toggle');
+  const menuToggleTheme = document.getElementById('menu-toggle-theme');
+  const menuReload = document.getElementById('menu-reload');
+
+  const closeMenu = () => {
+    menuRoot?.classList.remove('open');
+    if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
+  };
+  const openMenu = () => {
+    menuRoot?.classList.add('open');
+    if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'true');
+  };
+  const toggleMenu = () => {
+    if (menuRoot?.classList.contains('open')) closeMenu();
+    else openMenu();
+  };
+
+  menuToggleBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+  // close on outside click
+  document.addEventListener('click', (e) => {
+    if (!menuRoot || !menuRoot.classList.contains('open')) return;
+    if (!menuRoot.contains(e.target)) closeMenu();
+  });
+  // close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // toggle theme: flip current class independent of system preference
+  menuToggleTheme?.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    refreshThemeUI();
+    closeMenu();
+  });
+
+  // reload action
+  menuReload?.addEventListener('click', () => {
+    location.reload();
+  });
+}
+
 function init() {
   const priceChart = document.querySelector('price-chart');
   DOM.priceChart = priceChart;
@@ -383,71 +440,6 @@ function init() {
 
   applyDarkMode(isDarkMode());
   const media = darkModeMatch();
-  const refreshThemeUI = () => {
-    // re-apply chart options so it picks up new CSS variables, then resize
-    priceChart?.refreshTheme();
-    priceChart?.resizeChart();
-    // refresh price-card backgrounds based on stored values
-    DOM.cards.currentHour?.refreshThemeBackground?.();
-    DOM.cards.selectedRange?.refreshThemeBackground?.();
-    DOM.cards.last24Hours?.refreshThemeBackground?.();
-    // re-apply zoom to fix any potential layout issues after theme change
-    const button = document.querySelector('.zoom-controls button.active') || zoomControls.querySelector('button[data-hours="3"]');
-    if (button && button.dataset.hours) {
-      const hours = parseInt(button.dataset.hours, 10);
-      priceChart.setZoom(hours);
-    }
-  };
-  const onSchemeChange = (e) => {
-    applyDarkMode(e.matches);
-    refreshThemeUI();
-  };
-
-  const initMenu = () => {
-    const menuRoot = document.getElementById('menu-root');
-    const menuToggleBtn = document.getElementById('menu-toggle');
-    const menuToggleTheme = document.getElementById('menu-toggle-theme');
-    const menuReload = document.getElementById('menu-reload');
-
-    const closeMenu = () => {
-      menuRoot?.classList.remove('open');
-      if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
-    };
-    const openMenu = () => {
-      menuRoot?.classList.add('open');
-      if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'true');
-    };
-    const toggleMenu = () => {
-      if (menuRoot?.classList.contains('open')) closeMenu();
-      else openMenu();
-    };
-
-    menuToggleBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleMenu();
-    });
-    // close on outside click
-    document.addEventListener('click', (e) => {
-      if (!menuRoot || !menuRoot.classList.contains('open')) return;
-      if (!menuRoot.contains(e.target)) closeMenu();
-    });
-    // close on Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeMenu();
-    });
-
-    // toggle theme: flip current class independent of system preference
-    menuToggleTheme?.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      refreshThemeUI();
-      closeMenu();
-    });
-
-    // reload action
-    menuReload?.addEventListener('click', () => {
-      location.reload();
-    });
-  };
 
   if (media && media.addEventListener) {
     media.addEventListener('change', onSchemeChange);
